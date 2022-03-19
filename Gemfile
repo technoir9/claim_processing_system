@@ -25,6 +25,10 @@ group :development, :test do
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
   # RSpec for tests
   gem 'rspec-rails'
+  # Use factory_bot for test factories
+  gem 'factory_bot_rails'
+  # Use faker to generate sample data for tests and development
+  gem 'faker'
 end
 
 group :development do
@@ -40,3 +44,5 @@ end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+
+gem 'email_validator'
