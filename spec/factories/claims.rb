@@ -1,5 +1,5 @@
 FactoryBot.define do
   factory :claim do
-    customer { nil }
+    customer
   end
 end
