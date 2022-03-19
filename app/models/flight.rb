@@ -2,6 +2,7 @@
 
 class Flight < ApplicationRecord
   belongs_to :customer
+  belongs_to :claim
 
   validates :airline_code, presence: true
   validates :arrival_airport_code, presence: true
