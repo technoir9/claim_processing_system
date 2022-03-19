@@ -29,6 +29,7 @@ group :development, :test do
   gem 'factory_bot_rails'
   # Use faker to generate sample data for tests and development
   gem 'faker'
+  gem 'shoulda-matchers'
 end
 
 group :development do
