@@ -47,3 +47,8 @@ end
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem 'email_validator'
+gem 'representable'
+gem 'multi_json'
+gem 'dry-initializer'
+gem 'dry-monads'
+gem 'dry-types'

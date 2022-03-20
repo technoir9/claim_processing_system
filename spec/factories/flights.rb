@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :flight do
-    customer
+    claim
     departure_airport_code { 'WAW' }
     arrival_airport_code { 'KRK' }
     airline_code { 'FR' }

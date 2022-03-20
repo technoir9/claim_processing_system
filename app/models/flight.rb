@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Flight < ApplicationRecord
-  belongs_to :customer
   belongs_to :claim
 
   validates :airline_code, presence: true

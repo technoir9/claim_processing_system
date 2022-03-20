@@ -2,7 +2,6 @@
 
 class Customer < ApplicationRecord
   has_many :claims, dependent: :destroy
-  has_many :flights, dependent: :destroy
 
   validates :email, presence: true, email: { mode: :strict, require_fqdn: true }
 end

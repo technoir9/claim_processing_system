@@ -443,6 +443,9 @@ RSpec/ContextWording:
      - for
      - as
 
+RSpec/NamedSubject:
+  Enabled: false
+
 # Rails Cops
 
 Rails/SkipsModelValidations:
