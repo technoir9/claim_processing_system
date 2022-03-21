@@ -4,7 +4,6 @@
 
 * Ruby 3.0.1
 * PostgreSQL >= 9.0
-* Heroku CLI
 
 ## Configuration
 
@@ -32,3 +31,15 @@
    ```
 
 You should now be able to open the application in your browser by visiting http://localhost:3000/.
+
+## Environment variables
+
+* CLAIM_ELIGIBILITY_API_URL - claim eligibility API endpoint
+
+In order to set the environment variables for the development environment,
+you can create a file `.env` in the main project directory (it should be listed in `.gitignore`)
+and set them there like this:
+
+```
+ENV_VARIABLE_NAME=value
+```

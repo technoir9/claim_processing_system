@@ -28,3 +28,6 @@
 
 # Database config file
 config/database.yml
+
+# Ignore file with environment variables
+.env

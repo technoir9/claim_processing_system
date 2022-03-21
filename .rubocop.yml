@@ -442,9 +442,13 @@ RSpec/ContextWording:
      - unless
      - for
      - as
+     - by
 
 RSpec/NamedSubject:
   Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
 
 # Rails Cops
 

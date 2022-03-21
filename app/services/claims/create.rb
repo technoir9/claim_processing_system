@@ -10,7 +10,7 @@ module Claims
     def call
       claim = Claim.new(claim_params)
 
-      return Failure('Claim must have at least one flight') if claim.flights.size == 0
+      return Failure('Claim must have at least one flight') if claim.flights.empty?
 
       if claim.save
         Success()
