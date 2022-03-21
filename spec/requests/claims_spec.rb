@@ -44,6 +44,30 @@ RSpec.describe 'Claims', type: :request do
     end
 
     context 'with valid params' do
+      let(:stubbed_response2) do
+        [{
+          'flight_identifier' => 'OS-411-20211024-VIE-CDG',
+          'airline_code' => 'OS',
+          'flight_number' => '411',
+          'departure_date' => '2021-10-24',
+          'departure_airport_code' => 'VIE',
+          'arrival_airport_code' => 'CDG',
+          'delay_mins' => nil,
+          'flight_status' => flight_status
+        }].to_json
+      end
+      let(:flight_status) { 'on_time' }
+      let(:status_code2) { 200 }
+      let(:flight_identifier1) { 'LO-1234-20220319-KRK-WAW' }
+      let(:flight_identifier2) { 'FR-3454-20210102-WAW-GDN' }
+
+      before do
+        stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight_identifier1}")
+          .to_return(status: status_code2, body: stubbed_response2, headers: {})
+        stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight_identifier2}")
+          .to_return(status: status_code2, body: stubbed_response2, headers: {})
+      end
+
       it 'returns http success' do
         subject
 
@@ -66,6 +90,26 @@ RSpec.describe 'Claims', type: :request do
         expect(ClaimNotificationWorker).to receive(:perform_async)
 
         subject
+      end
+
+      context 'with eligible flights' do
+        let(:flight_status) { 'cancelled' }
+
+        it 'notifies about newly-created eligible claim' do
+          expect(ClaimsApi::V1::Notifications).to receive(:new).and_call_original
+
+          subject
+        end
+      end
+
+      context 'with ineligible flights' do
+        let(:flight_status) { 'no_data' }
+
+        it 'does not notify about the claim' do
+          expect(ClaimsApi::V1::Notifications).not_to receive(:new)
+
+          subject
+        end
       end
     end
 
