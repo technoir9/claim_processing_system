@@ -63,4 +63,8 @@ RSpec.configure do |config|
   # config.filter_gems_from_backtrace("gem name")
 
   config.include FactoryBot::Syntax::Methods
+
+  config.around(:example, type: :request) do |example|
+    Sidekiq::Testing.inline! { example.run }
+  end
 end

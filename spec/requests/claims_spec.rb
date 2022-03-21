@@ -29,6 +29,19 @@ RSpec.describe 'Claims', type: :request do
         ]
       }
     end
+    let(:status_code) { 200 }
+    let(:stubbed_response) do
+      {
+        'id' => '1',
+        'claim_id' => '123',
+        'requester' => 'some github user'
+      }.to_json
+    end
+
+    before do
+      stub_request(:post, "#{ENV.fetch('CLAIM_API_URL')}/claim_notifications")
+        .to_return(status: status_code, body: stubbed_response, headers: {})
+    end
 
     context 'with valid params' do
       it 'returns http success' do
@@ -47,6 +60,12 @@ RSpec.describe 'Claims', type: :request do
         expect { subject }.to change(Customer, :count).by(1) &
                               change(Claim, :count).by(1) &
                               change(Flight, :count).by(2)
+      end
+
+      it 'calls a worker' do
+        expect(ClaimNotificationWorker).to receive(:perform_async)
+
+        subject
       end
     end
 
@@ -91,6 +110,12 @@ RSpec.describe 'Claims', type: :request do
                               not_change(Claim, :count) &
                               not_change(Flight, :count)
       end
+
+      it 'does not call a worker' do
+        expect(ClaimNotificationWorker).not_to receive(:perform_async)
+
+        subject
+      end
     end
 
     context 'without flight params' do
@@ -123,6 +148,12 @@ RSpec.describe 'Claims', type: :request do
         expect { subject }.to not_change(Customer, :count) &
                               not_change(Claim, :count) &
                               not_change(Flight, :count)
+      end
+
+      it 'does not call a worker' do
+        expect(ClaimNotificationWorker).not_to receive(:perform_async)
+
+        subject
       end
     end
 
@@ -170,6 +201,12 @@ RSpec.describe 'Claims', type: :request do
         expect { subject }.to not_change(Customer, :count) &
                               not_change(Claim, :count) &
                               not_change(Flight, :count)
+      end
+
+      it 'does not call a worker' do
+        expect(ClaimNotificationWorker).not_to receive(:perform_async)
+
+        subject
       end
     end
 
@@ -222,6 +259,12 @@ RSpec.describe 'Claims', type: :request do
         expect { subject }.to not_change(Customer, :count) &
                               not_change(Claim, :count) &
                               not_change(Flight, :count)
+      end
+
+      it 'does not call a worker' do
+        expect(ClaimNotificationWorker).not_to receive(:perform_async)
+
+        subject
       end
     end
   end

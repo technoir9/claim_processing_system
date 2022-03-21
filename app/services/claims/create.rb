@@ -13,7 +13,7 @@ module Claims
       return Failure('Claim must have at least one flight') if claim.flights.empty?
 
       if claim.save
-        Success()
+        Success(claim.id)
       else
         Failure(claim.errors.to_hash)
       end

@@ -4,7 +4,6 @@ module ClaimsApi
   module V1
     class Flights
       extend Dry::Initializer
-      include Dry::Monads[:result]
 
       param :flight, Dry.Types::Instance(Flight), reader: :private
 
