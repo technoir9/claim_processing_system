@@ -15,7 +15,7 @@ module ClaimsApi
       NotFoundError = Class.new(ApiError)
       ServerError = Class.new(ApiError)
 
-      BASE_URL = ENV.fetch('CLAIM_ELIGIBILITY_API_URL')
+      BASE_URL = ENV.fetch('CLAIM_API_URL')
 
       def get(path: '', query: {})
         response = Excon.get("#{BASE_URL}#{path}", query: query)

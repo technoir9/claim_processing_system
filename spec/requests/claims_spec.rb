@@ -319,7 +319,7 @@ RSpec.describe 'Claims', type: :request do
     let(:status_code) { 200 }
 
     before do
-      stub_request(:get, "#{ENV.fetch('CLAIM_ELIGIBILITY_API_URL')}?flight_identifier=#{flight.identifier}")
+      stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight.identifier}")
         .to_return(status: status_code, body: stubbed_response, headers: {})
     end
 

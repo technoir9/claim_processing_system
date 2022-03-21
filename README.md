@@ -34,7 +34,7 @@ You should now be able to open the application in your browser by visiting http:
 
 ## Environment variables
 
-* CLAIM_ELIGIBILITY_API_URL - claim eligibility API endpoint
+* CLAIM_API_URL - claim API base URL
 
 In order to set the environment variables for the development environment,
 you can create a file `.env` in the main project directory (it should be listed in `.gitignore`)
