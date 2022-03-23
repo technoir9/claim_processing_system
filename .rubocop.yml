@@ -450,6 +450,9 @@ RSpec/NamedSubject:
 RSpec/MultipleMemoizedHelpers:
   Max: 10
 
+RSpec/MessageSpies:
+  Enabled: false
+
 # Rails Cops
 
 Rails/SkipsModelValidations:

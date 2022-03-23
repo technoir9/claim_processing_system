@@ -47,6 +47,7 @@ end
 
 group :test do
   gem 'webmock'
+  gem 'rspec-sidekiq'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
@@ -59,3 +60,4 @@ gem 'dry-initializer'
 gem 'dry-monads'
 gem 'dry-types'
 gem 'excon'
+gem 'sidekiq'

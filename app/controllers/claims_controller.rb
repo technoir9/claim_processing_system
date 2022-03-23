@@ -5,6 +5,7 @@ class ClaimsController < ApplicationController
     result = Claims::Create.new(create_claim_params.to_h).call
 
     if result.success?
+      ClaimNotificationWorker.perform_async(result.success)
       head 204
     else
       render json: { error: result.failure }, status: :unprocessable_entity

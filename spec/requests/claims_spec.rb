@@ -29,8 +29,45 @@ RSpec.describe 'Claims', type: :request do
         ]
       }
     end
+    let(:status_code) { 200 }
+    let(:stubbed_response) do
+      {
+        'id' => '1',
+        'claim_id' => '123',
+        'requester' => 'some github user'
+      }.to_json
+    end
+
+    before do
+      stub_request(:post, "#{ENV.fetch('CLAIM_API_URL')}/claim_notifications")
+        .to_return(status: status_code, body: stubbed_response, headers: {})
+    end
 
     context 'with valid params' do
+      let(:stubbed_response2) do
+        [{
+          'flight_identifier' => 'OS-411-20211024-VIE-CDG',
+          'airline_code' => 'OS',
+          'flight_number' => '411',
+          'departure_date' => '2021-10-24',
+          'departure_airport_code' => 'VIE',
+          'arrival_airport_code' => 'CDG',
+          'delay_mins' => nil,
+          'flight_status' => flight_status
+        }].to_json
+      end
+      let(:flight_status) { 'on_time' }
+      let(:status_code2) { 200 }
+      let(:flight_identifier1) { 'LO-1234-20220319-KRK-WAW' }
+      let(:flight_identifier2) { 'FR-3454-20210102-WAW-GDN' }
+
+      before do
+        stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight_identifier1}")
+          .to_return(status: status_code2, body: stubbed_response2, headers: {})
+        stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight_identifier2}")
+          .to_return(status: status_code2, body: stubbed_response2, headers: {})
+      end
+
       it 'returns http success' do
         subject
 
@@ -47,6 +84,32 @@ RSpec.describe 'Claims', type: :request do
         expect { subject }.to change(Customer, :count).by(1) &
                               change(Claim, :count).by(1) &
                               change(Flight, :count).by(2)
+      end
+
+      it 'calls a worker' do
+        expect(ClaimNotificationWorker).to receive(:perform_async)
+
+        subject
+      end
+
+      context 'with eligible flights' do
+        let(:flight_status) { 'cancelled' }
+
+        it 'notifies about newly-created eligible claim' do
+          expect(ClaimsApi::V1::Notifications).to receive(:new).and_call_original
+
+          subject
+        end
+      end
+
+      context 'with ineligible flights' do
+        let(:flight_status) { 'no_data' }
+
+        it 'does not notify about the claim' do
+          expect(ClaimsApi::V1::Notifications).not_to receive(:new)
+
+          subject
+        end
       end
     end
 
@@ -91,6 +154,12 @@ RSpec.describe 'Claims', type: :request do
                               not_change(Claim, :count) &
                               not_change(Flight, :count)
       end
+
+      it 'does not call a worker' do
+        expect(ClaimNotificationWorker).not_to receive(:perform_async)
+
+        subject
+      end
     end
 
     context 'without flight params' do
@@ -123,6 +192,12 @@ RSpec.describe 'Claims', type: :request do
         expect { subject }.to not_change(Customer, :count) &
                               not_change(Claim, :count) &
                               not_change(Flight, :count)
+      end
+
+      it 'does not call a worker' do
+        expect(ClaimNotificationWorker).not_to receive(:perform_async)
+
+        subject
       end
     end
 
@@ -170,6 +245,12 @@ RSpec.describe 'Claims', type: :request do
         expect { subject }.to not_change(Customer, :count) &
                               not_change(Claim, :count) &
                               not_change(Flight, :count)
+      end
+
+      it 'does not call a worker' do
+        expect(ClaimNotificationWorker).not_to receive(:perform_async)
+
+        subject
       end
     end
 
@@ -222,6 +303,12 @@ RSpec.describe 'Claims', type: :request do
         expect { subject }.to not_change(Customer, :count) &
                               not_change(Claim, :count) &
                               not_change(Flight, :count)
+      end
+
+      it 'does not call a worker' do
+        expect(ClaimNotificationWorker).not_to receive(:perform_async)
+
+        subject
       end
     end
   end
@@ -319,7 +406,7 @@ RSpec.describe 'Claims', type: :request do
     let(:status_code) { 200 }
 
     before do
-      stub_request(:get, "#{ENV.fetch('CLAIM_ELIGIBILITY_API_URL')}?flight_identifier=#{flight.identifier}")
+      stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight.identifier}")
         .to_return(status: status_code, body: stubbed_response, headers: {})
     end
 
