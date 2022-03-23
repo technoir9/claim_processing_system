@@ -280,7 +280,184 @@ RSpec.describe 'Claims', type: :request do
     context "when claim doesn't exist" do
       let(:claim_id) { claim.id + 1000 }
 
-      it 'returns http not found' do
+      it 'returns http 404' do
+        subject
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns error message' do
+        subject
+
+        expect(JSON.parse(response.body)).to eq(
+          { 'error' => 'Record not found' }
+        )
+      end
+    end
+  end
+
+  describe 'GET #eligibility' do
+    subject { get "/claims/#{claim_id}/eligibility" }
+
+    let(:claim) { create(:claim) }
+    let(:claim_id) { claim.id }
+    let!(:flight) { create(:flight, claim: claim) }
+    let(:stubbed_response) do
+      [{
+        'flight_identifier' => 'OS-411-20211024-VIE-CDG',
+        'airline_code' => 'OS',
+        'flight_number' => '411',
+        'departure_date' => '2021-10-24',
+        'departure_airport_code' => 'VIE',
+        'arrival_airport_code' => 'CDG',
+        'delay_mins' => delay_mins,
+        'flight_status' => flight_status
+      }].to_json
+    end
+    let(:delay_mins) { nil }
+    let(:flight_status) { 'cancelled' }
+    let(:status_code) { 200 }
+
+    before do
+      stub_request(:get, "#{ENV.fetch('CLAIM_ELIGIBILITY_API_URL')}?flight_identifier=#{flight.identifier}")
+        .to_return(status: status_code, body: stubbed_response, headers: {})
+    end
+
+    shared_examples 'eligible claim' do
+      let(:expected_response) do
+        {
+          'eligible' => true
+        }
+      end
+
+      it 'returns http 200' do
+        subject
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'returns claim data' do
+        subject
+
+        expect(JSON.parse(response.body)).to match(expected_response)
+      end
+    end
+
+    shared_examples 'ineligible claim' do
+      let(:expected_response) do
+        {
+          'eligible' => false
+        }
+      end
+
+      it 'returns http 200' do
+        subject
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'returns claim data' do
+        subject
+
+        expect(JSON.parse(response.body)).to match(expected_response)
+      end
+    end
+
+    context 'when claim exists' do
+      context 'with a cancelled flight' do
+        let(:flight_status) { 'cancelled' }
+
+        include_examples 'eligible claim'
+      end
+
+      context 'with a delayed flight' do
+        let(:flight_status) { 'delayed' }
+
+        context 'by more than 180 minutes' do
+          let(:delay_mins) { 181 }
+
+          include_examples 'eligible claim'
+        end
+
+        context 'by no more than 180 minutes' do
+          let(:delay_mins) { 180 }
+
+          include_examples 'ineligible claim'
+        end
+      end
+
+      context 'with an on-time flight' do
+        let(:flight_status) { 'on_time' }
+
+        include_examples 'ineligible claim'
+      end
+
+      context 'without flight status data' do
+        let(:flight_status) { 'no_data' }
+
+        include_examples 'ineligible claim'
+      end
+    end
+
+    context 'when API returns 404' do
+      let(:status_code) { 404 }
+
+      it 'returns http 404' do
+        subject
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it 'returns error message' do
+        subject
+
+        expect(JSON.parse(response.body)).to eq(
+          { 'error' => 'Record not found' }
+        )
+      end
+    end
+
+    context 'when API returns 4xx, but not 404' do
+      let(:status_code) { 400 }
+      let(:stubbed_response) { 'Some client error message' }
+
+      it 'returns http 400' do
+        subject
+
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it 'returns error message' do
+        subject
+
+        expect(JSON.parse(response.body)).to eq(
+          { 'error' => 'Some client error message' }
+        )
+      end
+    end
+
+    context 'when API returns 5xx' do
+      let(:status_code) { 500 }
+
+      it 'returns http 500' do
+        subject
+
+        expect(response).to have_http_status(:internal_server_error)
+      end
+
+      it 'returns error message' do
+        subject
+
+        expect(JSON.parse(response.body)).to eq(
+          { 'error' => 'Internal server error' }
+        )
+      end
+    end
+
+    context "when claim doesn't exist" do
+      let(:claim_id) { claim.id + 1000 }
+
+      it 'returns http 404' do
         subject
 
         expect(response).to have_http_status(:not_found)

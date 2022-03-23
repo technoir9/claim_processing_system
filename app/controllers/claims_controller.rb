@@ -15,6 +15,12 @@ class ClaimsController < ApplicationController
     render json: ClaimRepresenter.new(claim)
   end
 
+  def eligibility
+    eligible = Claims::Eligibility.new(claim).call
+
+    render json: { eligible: eligible }, status: :ok
+  end
+
   private
 
   def create_claim_params

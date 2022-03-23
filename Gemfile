@@ -30,6 +30,8 @@ group :development, :test do
   # Use faker to generate sample data for tests and development
   gem 'faker'
   gem 'shoulda-matchers'
+  # Use dotenv to handle environment variables
+  gem 'dotenv-rails'
 end
 
 group :development do
@@ -43,6 +45,10 @@ group :development do
   gem 'rubocop-thread_safety'
 end
 
+group :test do
+  gem 'webmock'
+end
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
@@ -52,3 +58,4 @@ gem 'multi_json'
 gem 'dry-initializer'
 gem 'dry-monads'
 gem 'dry-types'
+gem 'excon'
