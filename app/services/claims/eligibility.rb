@@ -13,12 +13,14 @@ module Claims
     param :claim, Dry.Types::Instance(Claim), reader: :private
 
     def call
-      eligible?
+      return claim.eligible? unless claim.unknown?
+
+      check_eligibility
     end
 
     private
 
-    def eligible?
+    def check_eligibility
       eligible = false
 
       claim.flights.each do |flight|
