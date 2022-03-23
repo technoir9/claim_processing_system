@@ -9,7 +9,11 @@ class Flight < ApplicationRecord
   validates :departure_date, presence: true
   validates :flight_number, presence: true
 
-  def identifier
-    "#{airline_code}-#{flight_number}-#{departure_date.to_s.gsub('-', '')}-#{departure_airport_code}-#{arrival_airport_code}"
+  before_create :set_identifier
+
+  private
+
+  def set_identifier
+    self.flight_identifier = "#{airline_code}-#{flight_number}-#{departure_date.to_s.gsub('-', '')}-#{departure_airport_code}-#{arrival_airport_code}"
   end
 end
