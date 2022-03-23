@@ -22,6 +22,12 @@ class ClaimsController < ApplicationController
     render json: { eligible: eligible }, status: :ok
   end
 
+  def download
+    result = Claims::Download.new(flight_identifier).call
+
+    render csv: result, status: :ok
+  end
+
   private
 
   def create_claim_params
@@ -33,5 +39,9 @@ class ClaimsController < ApplicationController
 
   def claim
     Claim.find(params.require(:id))
+  end
+
+  def flight_identifier
+    params.require(:flight_identifier)
   end
 end

@@ -8,7 +8,7 @@ module ClaimsApi
       param :flight, Dry.Types::Instance(Flight), reader: :private
 
       def call
-        api_client.get(path: '/flights', query: { flight_identifier: flight.identifier})
+        api_client.get(path: '/flights', query: { flight_identifier: flight.flight_identifier})
       end
 
       private

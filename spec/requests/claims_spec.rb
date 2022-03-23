@@ -406,7 +406,7 @@ RSpec.describe 'Claims', type: :request do
     let(:status_code) { 200 }
 
     before do
-      stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight.identifier}")
+      stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight.flight_identifier}")
         .to_return(status: status_code, body: stubbed_response, headers: {})
     end
 
@@ -556,6 +556,104 @@ RSpec.describe 'Claims', type: :request do
         expect(JSON.parse(response.body)).to eq(
           { 'error' => 'Record not found' }
         )
+      end
+    end
+  end
+
+  describe '#download' do
+    subject { get '/claims/download', params: { flight_identifier: flight_identifier } }
+
+    let(:flight_identifier) { 'SK-2550-20201228-MAN-ARN' }
+    let(:claim1) { create(:claim) }
+    let(:claim2) { create(:claim) }
+    let(:claim3) { create(:claim) }
+    let(:expected_response) do
+      "claim_id,email,first_name,last_name,flight_identifiers\n" \
+        "#{claim1.id},#{claim1.customer.email},#{claim1.customer.first_name},#{claim1.customer.last_name},\"[\"\"SK-2550-20201228-MAN-ARN\"\"]\"\n" \
+        "#{claim2.id},#{claim2.customer.email},#{claim2.customer.first_name},#{claim2.customer.last_name},\"[\"\"SK-2550-20201228-MAN-ARN\"\", \"\"SK-2551-20201228-MAN-ARN\"\"]\"\n"
+    end
+    let(:eligible_stubbed_response) do
+      [{
+        'flight_status' => 'cancelled'
+      }].to_json
+    end
+    let(:ineligible_stubbed_response) do
+      [{
+        'flight_status' => 'on_time'
+      }].to_json
+    end
+    let(:status_code) { 200 }
+    let!(:flight1) do
+      create(:flight, claim: claim1,
+                      airline_code: 'SK',
+                      arrival_airport_code: 'ARN',
+                      departure_airport_code: 'MAN',
+                      departure_date: '2020-12-28',
+                      flight_number: '2550')
+    end
+
+    before do
+      flight2 = create(:flight, claim: claim2,
+                                airline_code: 'SK',
+                                arrival_airport_code: 'ARN',
+                                departure_airport_code: 'MAN',
+                                departure_date: '2020-12-28',
+                                flight_number: '2550')
+      flight3 = create(:flight, claim: claim3,
+                                airline_code: 'SK',
+                                arrival_airport_code: 'ARN',
+                                departure_airport_code: 'MAN',
+                                departure_date: '2020-12-28',
+                                flight_number: '2551')
+      flight4 = create(:flight, claim: claim2,
+                                airline_code: 'SK',
+                                arrival_airport_code: 'ARN',
+                                departure_airport_code: 'MAN',
+                                departure_date: '2020-12-28',
+                                flight_number: '2551')
+      stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight1.flight_identifier}")
+        .to_return(status: status_code, body: eligible_stubbed_response, headers: {})
+      stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight2.flight_identifier}")
+        .to_return(status: status_code, body: eligible_stubbed_response, headers: {})
+      stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight3.flight_identifier}")
+        .to_return(status: status_code, body: eligible_stubbed_response, headers: {})
+      stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight4.flight_identifier}")
+        .to_return(status: status_code, body: eligible_stubbed_response, headers: {})
+    end
+
+    it 'returns http 200' do
+      subject
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it 'returns claims data as CSV' do
+      subject
+
+      expect(response.body).to eq(expected_response)
+    end
+
+    context 'with some ineligible claims' do
+      let(:expected_response) do
+        "claim_id,email,first_name,last_name,flight_identifiers\n" \
+        "#{claim2.id},#{claim2.customer.email},#{claim2.customer.first_name},#{claim2.customer.last_name},\"[\"\"SK-2550-20201228-MAN-ARN\"\", \"\"SK-2551-20201228-MAN-ARN\"\"]\"\n"
+      end
+
+      before do
+        stub_request(:get, "#{ENV.fetch('CLAIM_API_URL')}/flights?flight_identifier=#{flight1.flight_identifier}")
+          .to_return(status: status_code, body: ineligible_stubbed_response, headers: {})
+      end
+
+      it 'returns http 200' do
+        subject
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'returns claims data as CSV' do
+        subject
+
+        expect(response.body).to eq(expected_response)
       end
     end
   end
